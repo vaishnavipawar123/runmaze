@@ -1,9 +1,11 @@
-const X_VELOCITY = 200
-const JUMP_POWER = 250
-const GRAVITY = 580
+const OPOSUM_X_VELOCITY = -20
+const OPOSUM_JUMP_POWER = 250
+const OPOSUM_GRAVITY = 580
 
-class Player {
-  constructor({ x, y, size, velocity = { x: 0, y: 0 } }) {
+class Oposum {
+  constructor({ x, y, size, velocity = { x: OPOSUM_X_VELOCITY, y: 0 } },
+    turningdistance=80,)
+   {
     this.x = x
     this.y = y
     this.width = size
@@ -15,73 +17,46 @@ class Player {
     this.image.onload = () => {
       this.isImageLoaded = true
     }
-    this.image.src = './images/player.png'
+    this.image.src = './images/oposum.png'
     this.elapsedTime = 0
     this.currentFrame = 0
     this.sprites = {
-      idle: {
-        x: 0,
-        y: 0,
-        width: 33,
-        height: 32,
-        frames: 4,
-      },
+      
       run: {
         x: 0,
-        y: 32,
-        width: 33,
-        height: 32,
+        y: 0,
+        width: 36,
+        height: 28,
         frames: 6,
-      },
-      jump: {
-        x: 0,
-        y: 32 * 5,
-        width: 33,
-        height: 32,
-        frames: 1,
-      },
-      fall: {
-        x: 33,
-        y: 32 * 5,
-        width: 33,
-        height: 32,
-        frames: 1,
-      },
-      roll: {
-        x: 0,
-        y: 32 * 9,
-        width: 33,
-        height: 32,
-        frames: 4,
-      },
+      }
     }
-    this.currentSprite = this.sprites.roll
+    this.currentSprite = this.sprites.run
     this.facing = 'right'
     this.hitbox = {
       x: 0,
       y: 0,
-      width: 20,
+      width: 30,
       height: 23,
     }
+    this.distanceTraveled=0;
+    this.turningdistance=turningdistance;
+
     this.isInvincible = false
     this.isRolling = false
     this.isInAirAfterRolling = false
   }
 
   setIsInvincible() {
-    if (this.isInvincible) return; // Avoid multiple activations
-    this.isInvincible = true;
-  
+    this.isInvincible = true
     setTimeout(() => {
-      this.isInvincible = false;
-    }, 1500);
+      this.isInvincible = false
+    }, 1500)
   }
-  
 
   draw(c) {
     // Red square debug code
-    // c.fillStyle = 'rgba(255, 0, 0, 0.5)'
-    // c.fillRect(this.x, this.y, this.width, this.height)
+    //  c.fillStyle = 'rgba(255, 0, 0, 0.5)'
+    //  c.fillRect(this.x, this.y, this.width, this.height)
 
     // Hitbox
     // c.fillStyle = 'rgba(0, 0, 255, 0.5)'
@@ -96,7 +71,7 @@ class Player {
       let xScale = 1
       let x = this.x
 
-      if (this.facing === 'left') {
+      if (this.facing === 'right') {
         xScale = -1
         x = -this.x - this.width
       }
@@ -139,7 +114,7 @@ class Player {
     }
 
     // Update hitbox position
-    this.hitbox.x = this.x + 4
+    this.hitbox.x = this.x 
     this.hitbox.y = this.y + 9
 
     this.applyGravity(deltaTime)
@@ -156,7 +131,7 @@ class Player {
     this.checkForVerticalCollisions(collisionBlocks)
 
     this.determineDirection()
-    this.switchSprites()
+  
   }
 
   roll() {
@@ -177,53 +152,24 @@ class Player {
     }
   }
 
-  switchSprites() {
-    if (this.isRolling) return
-
-    if (
-      this.isOnGround &&
-      this.velocity.x === 0 &&
-      this.currentSprite !== this.sprites.idle
-    ) {
-      // Idle
-      this.currentFrame = 0
-      this.currentSprite = this.sprites.idle
-    } else if (
-      this.isOnGround &&
-      this.velocity.x !== 0 &&
-      this.currentSprite !== this.sprites.run
-    ) {
-      // Run
-      this.currentFrame = 0
-      this.currentSprite = this.sprites.run
-    } else if (
-      !this.isOnGround &&
-      this.velocity.y < 0 &&
-      this.currentSprite !== this.sprites.jump
-    ) {
-      // Jump
-      this.currentFrame = 0
-      this.currentSprite = this.sprites.jump
-    } else if (
-      !this.isOnGround &&
-      this.velocity.y > 0 &&
-      this.currentSprite !== this.sprites.fall
-    ) {
-      // Fall
-      this.currentFrame = 0
-      this.currentSprite = this.sprites.fall
-    }
-  }
+  
 
   jump() {
-    this.velocity.y = -JUMP_POWER
+    this.velocity.y = -OPOSUM_JUMP_POWER
     this.isOnGround = false
   }
 
   updateHorizontalPosition(deltaTime) {
+    if(Math.abs(this.distanceTraveled) > this.turningdistance){
+      this.velocity.x = -this.velocity.x
+      this.distanceTraveled = 0    
+    }
+
     this.x += this.velocity.x * deltaTime
     this.hitbox.x += this.velocity.x * deltaTime
+    this.distanceTraveled += this.velocity.x * deltaTime
   }
+
 
   updateVerticalPosition(deltaTime) {
     this.y += this.velocity.y * deltaTime
@@ -231,7 +177,7 @@ class Player {
   }
 
   applyGravity(deltaTime) {
-    this.velocity.y += GRAVITY * deltaTime
+    this.velocity.y += OPOSUM_GRAVITY* deltaTime
   }
 
   handleInput(keys) {
@@ -240,9 +186,9 @@ class Player {
     this.velocity.x = 0
 
     if (keys.d.pressed) {
-      this.velocity.x = X_VELOCITY
+      this.velocity.x = OPOSUM_X_VELOCITY
     } else if (keys.a.pressed) {
-      this.velocity.x = -X_VELOCITY
+      this.velocity.x = -OPOSUM_X_VELOCITY
     }
   }
 
@@ -267,7 +213,7 @@ class Player {
         // Check collision while player is going left
         if (this.velocity.x < -0) {
           this.hitbox.x = collisionBlock.x + collisionBlock.width + buffer
-          this.x = this.hitbox.x - 4
+          this.x = this.hitbox.x 
           this.stopRoll()
           break
         }
@@ -275,7 +221,7 @@ class Player {
         // Check collision while player is going right
         if (this.velocity.x > 0) {
           this.hitbox.x = collisionBlock.x - this.hitbox.width - buffer
-          this.x = this.hitbox.x - 4
+          this.x = this.hitbox.x 
           this.stopRoll()
           break
         }
